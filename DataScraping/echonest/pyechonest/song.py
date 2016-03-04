@@ -41,6 +41,11 @@ class Song(SongProxy):
         artist_location (dict): A dictionary of strings specifying a song's parent artist's location, lattitude and longitude
         
     Create a song object like so:
+        buckets=["song_hotttnesss", "song_hotttnesss_rank", "artist_familiarity", "artist_familiarity_rank", "artist_hotttnesss", 
+        "artist_hotttnesss_rank", "artist_discovery", "artist_discovery_rank", "audio_summary", "artist_location", "tracks",
+        "song_type", "song_discovery", "song_discovery_rank", "song_currency", "song_currency_rank", "id:7digital-US", "id:7digital-AU", 
+        "id:7digital-UK", "id:facebook", "id:fma", "id:twitter", "id:spotify-WW", "id:seatwave", "id:lyricfind-US", "id:jambase", "id:musixmatch-WW", 
+        "id:seatgeek","id:openaura", "id:spotify", "id:spotify-WW", "id:tumblr",]
 
     >>> s = song.Song('SOPEXHZ12873FD2AC7')
     
@@ -77,18 +82,68 @@ class Song(SongProxy):
     def __str__(self):
         return self.title.encode('utf-8')
     
-        
+    def get_song_hotttnesss(self, cache=True):
+        if not (cache and ('song_hotttnesss' in self.cache)):
+            response = self.get_attribute('profile', bucket='song_hotttnesss')
+            self.cache['song_hotttnesss'] = response['songs'][0]['song_hotttnesss']
+        return self.cache['song_hotttnesss']
+    song_hotttnesss = property(get_song_hotttnesss)
+
+    
+    def get_song_hotttnesss_rank(self, cache=True):
+        if not (cache and ('song_hotttnesss_rank' in self.cache)):
+            response = self.get_attribute('profile', bucket='song_hotttnesss_rank')
+            self.cache['song_hotttnesss_rank'] = response['songs'][0]['song_hotttnesss_rank']
+        return self.cache['song_hotttnesss_rank']
+    song_hotttnesss_rank = property(get_song_hotttnesss_rank)
+    
+    def get_artist_familiarity(self, cache=True):
+        if not (cache and ('artist_familiarity' in self.cache)):
+            response = self.get_attribute('profile', bucket='artist_familiarity')
+            self.cache['artist_familiarity'] = response['songs'][0]['artist_familiarity']
+        return self.cache['artist_familiarity']
+    artist_familiarity = property(get_artist_familiarity)
+  
+    def get_artist_familiarity_rank(self, cache=True):
+        if not (cache and ('artist_familiarity_rank' in self.cache)):
+            response = self.get_attribute('profile', bucket='artist_familiarity_rank')
+            self.cache['artist_familiarity_rank'] = response['songs'][0]['artist_familiarity_rank']
+        return self.cache['artist_familiarity_rank']
+    artist_familiarity_rank = property(get_artist_familiarity_rank)
+
+    def get_artist_hotttnesss(self, cache=True):
+        if not (cache and ('artist_hotttnesss' in self.cache)):
+            response = self.get_attribute('profile', bucket='artist_hotttnesss')
+            self.cache['artist_hotttnesss'] = response['songs'][0]['artist_hotttnesss']
+        return self.cache['artist_hotttnesss']
+    artist_hotttnesss = property(get_artist_hotttnesss)
+
+    def get_artist_hotttnesss_rank(self, cache=True):
+        if not (cache and ('artist_hotttnesss_rank' in self.cache)):
+            response = self.get_attribute('profile', bucket='artist_hotttnesss_rank')
+            self.cache['artist_hotttnesss_rank'] = response['songs'][0]['artist_hotttnesss_rank']
+        return self.cache['artist_hotttnesss_rank']
+    artist_hotttnesss_rank = property(get_artist_hotttnesss_rank)
+
+    def get_artist_discovery(self, cache=True):
+        if not (cache and ('artist_discovery' in self.cache)):
+            response = self.get_attribute('profile', bucket='artist_discovery')
+            self.cache['artist_discovery'] = response['songs'][0]['artist_discovery']
+        return self.cache['artist_discovery']
+    artist_discovery = property(get_artist_discovery)
+
+    def get_artist_discovery_rank(self, cache=True):
+        if not (cache and ('artist_discovery_rank' in self.cache)):
+            response = self.get_attribute('profile', bucket='artist_discovery_rank')
+            self.cache['artist_discovery_rank'] = response['songs'][0]['artist_discovery_rank']
+        return self.cache['artist_discovery_rank']
+    artist_discovery_rank = property(get_artist_discovery_rank)
+
+    
     def get_audio_summary(self, cache=True):
         """Get an audio summary of a song containing mode, tempo, key, duration, time signature, loudness, danceability, energy, and analysis_url.
-        
-        Args:
-        
-        Kwargs:
-            cache (bool): A boolean indicating whether or not the cached value should be used (if available). Defaults to True.
-        
         Returns:
             A dictionary containing mode, tempo, key, duration, time signature, loudness, danceability, energy and analysis_url keys.
-            
         Example:
             >>> s = song.Song('SOGNMKX12B0B806320')
             >>> s.audio_summary
@@ -105,7 +160,6 @@ class Song(SongProxy):
               u'tempo': 126.949,
               u'time_signature': 4}
             >>> 
-            
         """
         if not (cache and ('audio_summary' in self.cache)):
             response = self.get_attribute('profile', bucket='audio_summary')
@@ -114,52 +168,19 @@ class Song(SongProxy):
             else:
                 self.cache['audio_summary'] = {}
         return self.cache['audio_summary']
-    
     audio_summary = property(get_audio_summary)
     
-    def get_song_hotttnesss(self, cache=True):
-        """Get our numerical description of how hottt a song currently is
-        
-        Args:
-        
-        Kwargs:
-            cache (bool): A boolean indicating whether or not the cached value should be used (if available). Defaults to True.
-        
-        Returns:
-            A float representing hotttnesss.
-        
-        Example:
-            >>> s = song.Song('SOLUHKP129F0698D49')
-            >>> s.get_song_hotttnesss()
-            0.57344379999999995
-            >>> s.song_hotttnesss
-            0.57344379999999995
-            >>> 
-
-        """
-        if not (cache and ('song_hotttnesss' in self.cache)):
-            response = self.get_attribute('profile', bucket='song_hotttnesss')
-            self.cache['song_hotttnesss'] = response['songs'][0]['song_hotttnesss']
-        return self.cache['song_hotttnesss']
-    
-    song_hotttnesss = property(get_song_hotttnesss)
+    def get_artist_location(self, cache=True):
+        if not (cache and ('artist_location' in self.cache)):
+            response = self.get_attribute('profile', bucket='artist_location')
+            self.cache['artist_location'] = response['songs'][0]['artist_location']
+        return self.cache['artist_location']
+    artist_location = property(get_artist_location)
 
     def get_song_type(self, cache=True):
         """Get the types of a song.
-        
-        Args:
-            cache (boolean): A boolean indicating whether or not the cached value should be used
-            (if available). Defaults to True.
-        
         Returns:
             A list of strings, each representing a song type:  'christmas', for example.
-        
-        Example:
-            >>> s = song.Song('SOQKVPH12A58A7AF4D')
-            >>> s.song_type
-            [u'christmas']
-            >>> 
-
         """ 
         if not (cache and ('song_type' in self.cache)):
             response = self.get_attribute('profile', bucket='song_type')
@@ -168,192 +189,35 @@ class Song(SongProxy):
             else:
                 self.cache['song_type'] = []
         return self.cache['song_type']
-
     song_type = property(get_song_type)
     
-    def get_artist_hotttnesss(self, cache=True):
-        """Get our numerical description of how hottt a song's artist currently is
-        
-        Args:
-        
-        Kwargs:
-            cache (bool): A boolean indicating whether or not the cached value should be used (if available). Defaults to True.
-        
-        Returns:
-            A float representing hotttnesss.
-        
-        Example:
-            >>> s = song.Song('SOOLGAZ127F3E1B87C')
-            >>> s.artist_hotttnesss
-            0.45645633000000002
-            >>> s.get_artist_hotttnesss()
-            0.45645633000000002
-            >>> 
-        
-        """
-        if not (cache and ('artist_hotttnesss' in self.cache)):
-            response = self.get_attribute('profile', bucket='artist_hotttnesss')
-            self.cache['artist_hotttnesss'] = response['songs'][0]['artist_hotttnesss']
-        return self.cache['artist_hotttnesss']
-    
-    artist_hotttnesss = property(get_artist_hotttnesss)
-    
-    def get_artist_familiarity(self, cache=True):
-        """Get our numerical estimation of how familiar a song's artist currently is to the world
-        
-        Args:
-            cache (bool): A boolean indicating whether or not the cached value should be used (if available). Defaults to True.
-        
-        Returns:
-            A float representing familiarity.
-        
-        Example:
-            >>> s = song.Song('SOQKVPH12A58A7AF4D')
-            >>> s.get_artist_familiarity()
-            0.639626025843539
-            >>> s.artist_familiarity
-            0.639626025843539
-            >>> 
-        """
-        if not (cache and ('artist_familiarity' in self.cache)):
-            response = self.get_attribute('profile', bucket='artist_familiarity')
-            self.cache['artist_familiarity'] = response['songs'][0]['artist_familiarity']
-        return self.cache['artist_familiarity']
-    
-    artist_familiarity = property(get_artist_familiarity)
-    
-    def get_artist_location(self, cache=True):
-        """Get the location of a song's artist.
-        
-        Args:
-            cache (bool): A boolean indicating whether or not the cached value should be used (if available). Defaults to True.
-        
-        Returns:
-            An artist location object.
-        
-        Example:
-            >>> s = song.Song('SOQKVPH12A58A7AF4D')
-            >>> s.artist_location
-            {u'latitude': 34.053489999999996, u'location': u'Los Angeles, CA', u'longitude': -118.24532000000001}
-            >>> 
-
-        """
-        if not (cache and ('artist_location' in self.cache)):
-            response = self.get_attribute('profile', bucket='artist_location')
-            self.cache['artist_location'] = response['songs'][0]['artist_location']
-        return self.cache['artist_location']
-    
-    artist_location = property(get_artist_location)
-    
-    def get_foreign_id(self, idspace='', cache=True):
-        """Get the foreign id for this song for a specific id space
-        
-        Args:
-        
-        Kwargs:
-            idspace (str): A string indicating the idspace to fetch a foreign id for.
-        
-        Returns:
-            A foreign ID string
-        
-        Example:
-        
-        >>> s = song.Song('SOYRVMR12AF729F8DC')
-        >>> s.get_foreign_id('CAGPXKK12BB06F9DE9')
-        
-        >>> 
-        """
-        idspace = util.map_idspace(idspace)
-        if not (cache and ('foreign_ids' in self.cache) and filter(lambda d: d.get('catalog') == idspace, self.cache['foreign_ids'])):
-            response = self.get_attribute('profile', bucket=['id:'+idspace])
-            rsongs = response['songs']
-            if len(rsongs) == 0:
-                return None
-            foreign_ids = rsongs[0].get("foreign_ids", [])
-            self.cache['foreign_ids'] = self.cache.get('foreign_ids', []) + foreign_ids
-        cval = filter(lambda d: d.get('catalog') == idspace, self.cache.get('foreign_ids'))
-        return cval[0].get('foreign_id') if cval else None
-
     def get_song_discovery(self, cache=True):
-        """
-        Args:
-            cache (bool): A boolean indicating whether or not the cached value should be used (if available). Defaults to True.
-
-        Returns:
-            A float representing a song's discovery rank.
-
-        Example:
-            >>> s = song.Song('SOQKVPH12A58A7AF4D')
-            >>> s.get_song_discovery()
-            0.639626025843539
-            >>> s.song_discovery
-            0.639626025843539
-            >>>
-        """
         if not (cache and ('song_discovery' in self.cache)):
             response = self.get_attribute('profile', bucket='song_discovery')
             self.cache['song_discovery'] = response['songs'][0]['song_discovery']
         return self.cache['song_discovery']
-
     song_discovery = property(get_song_discovery)
 
+    def get_song_discovery_rank(self, cache=True):
+        if not (cache and ('song_discovery_rank' in self.cache)):
+            response = self.get_attribute('profile', bucket='song_discovery_rank')
+            self.cache['song_discovery_rank'] = response['songs'][0]['song_discovery_rank']
+        return self.cache['song_discovery_rank']
+    song_discovery_rank = property(get_song_discovery_rank)
+
     def get_song_currency(self, cache=True):
-        """
-        Args:
-            cache (bool): A boolean indicating whether or not the cached value should be used (if available). Defaults to True.
-        
-        Returns:
-            A float representing a song's currency rank.
-            
-        Example:
-            >>> s = song.Song('SOQKVPH12A58A7AF4D')
-            >>> s.get_song_currency()
-            0.639626025843539
-            >>> s.song_currency
-            0.639626025843539
-            >>>
-        """
         if not (cache and ('song_currency' in self.cache)):
             response = self.get_attribute('profile', bucket='song_currency')
             self.cache['song_currency'] = response['songs'][0]['song_currency']
         return self.cache['song_currency']
-
     song_currency = property(get_song_currency)
-    
-    def get_tracks(self, catalog, cache=True):
-        """Get the tracks for a song given a catalog.
-        
-        Args:
-            catalog (str): a string representing the catalog whose track you want to retrieve.
-        
-        Returns:
-            A list of Track dicts.
-        
-        Example:
-            >>> s = song.Song('SOWDASQ12A6310F24F')
-            >>> s.get_tracks('7digital')[0]
-            {u'catalog': u'7digital',
-             u'foreign_id': u'7digital:track:8445818',
-             u'id': u'TRJGNNY12903CC625C',
-             u'preview_url': u'http://previews.7digital.com/clips/34/8445818.clip.mp3',
-             u'release_image': u'http://cdn.7static.com/static/img/sleeveart/00/007/628/0000762838_200.jpg'}
-            >>> 
 
-        """
-        if not (cache and ('tracks' in self.cache) and (catalog in [td['catalog'] for td in self.cache['tracks']])):
-            kwargs = {
-                'bucket':['tracks', 'id:%s' % catalog],
-            }
-                        
-            response = self.get_attribute('profile', **kwargs)
-            if not 'tracks' in self.cache:
-                self.cache['tracks'] = []
-            # don't blow away the cache for other catalogs
-            potential_tracks = response['songs'][0].get('tracks', [])
-            existing_track_ids = [tr['foreign_id'] for tr in self.cache['tracks']]
-            new_tds = filter(lambda tr: tr['foreign_id'] not in existing_track_ids, potential_tracks)
-            self.cache['tracks'].extend(new_tds)
-        return filter(lambda tr: tr['catalog']==util.map_idspace(catalog), self.cache['tracks'])
+    def get_song_currency_rank(self, cache=True):
+        if not (cache and ('song_currency_rank' in self.cache)):
+            response = self.get_attribute('profile', bucket='song_currency_rank')
+            self.cache['song_currency_rank'] = response['songs'][0]['song_currency_rank']
+        return self.cache['song_currency_rank']
+    song_currency_rank = property(get_song_currency_rank)
 
 
 def search(title=None, artist=None, artist_id=None, combined=None, description=None, style=None, mood=None,
@@ -445,7 +309,7 @@ def search(title=None, artist=None, artist_id=None, combined=None, description=N
     del kwargs['buckets']
     
     result = util.callm("%s/%s" % ('song', 'search'), kwargs)
-    return [Song(**util.fix(s_dict)) for s_dict in result['response']['songs']]
+    return result
 
 def profile(ids=None, track_ids=None, buckets=None, limit=False):
     """get the profiles for multiple songs at once
@@ -504,5 +368,5 @@ def profile(ids=None, track_ids=None, buckets=None, limit=False):
         kwargs['limit'] = 'true'
     
     result = util.callm("%s/%s" % ('song', 'profile'), kwargs)
-    return [Song(**util.fix(s_dict)) for s_dict in result['response']['songs']]
+    return result
 

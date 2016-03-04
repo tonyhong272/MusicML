@@ -46,3 +46,5 @@ CALL_TIMEOUT = 10
 """
 The API call timeout (seconds)
 """
+
+ECHO_NEST_API_KEY="FDLQPNF2R2DSP8ARN"
