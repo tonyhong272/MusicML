@@ -16,7 +16,7 @@ def get_tempo(artist, title):
     else:
         return None
 
-def get_songDict(song_title,song_artist):
+def get_songDict(song_title,song_artist,is_saving_analysis):
     argu = ['',song_artist, song_title]
     tempo = get_tempo(argu[1], argu[2])
     if tempo:
@@ -27,12 +27,21 @@ def get_songDict(song_title,song_artist):
         tempo.pop('artist_location')
         tempo['song_type_string'] = ';'.join(tempo['song_type'])
         tempo.pop('song_type')
+        tempo['saveFile'] = ''
         songDict = tempo.copy()
+        if is_saving_analysis:
+            songDict['saveFile'] = songDict.get('id') + '.txt'
+            save_analysis(songDict)
         return songDict
     else:
         print "Can't find track for artist:", argu[1], 'song:', argu[2]
 
-        
+def save_analysis (songDict):
+    import urllib, json
+    url = songDict['analysis_url']
+    response = urllib.urlopen(url)
+    data = json.loads(response.read())
+    with open(songDict.get('id') + '.txt', 'w') as outfile:
+        json.dump(data, outfile)
 
-
-get_songDict('work','rihanna')
+#newSong = get_songDict(song_title = 'umbrella', song_artist = 'Rihanna', is_saving_analysis = True)
