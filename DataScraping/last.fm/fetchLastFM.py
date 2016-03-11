@@ -13,6 +13,8 @@ http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=2a59114aa8b3e871f
 import urllib
 import httplib
 import json
+#import dateutil.parser
+import re
 
 def connection (params, **kwarg):
     '''
@@ -127,6 +129,7 @@ def get_artist (artist, artist_mbid=None, **kwarg):
             params = urllib.urlencode({'method' : 'artist.getInfo',
                'artist' : artist,
                'api_key' : '2a59114aa8b3e871fe76e14d3380ad98',
+               'autocorrect':'1',
                'format':'json'})
     
     json_response = connection (params)
@@ -150,9 +153,29 @@ def get_artist (artist, artist_mbid=None, **kwarg):
             for artist_dicts in artist_dict_temp.pop('similar')['artist']:
                 similar_list.append(artist_dicts['name'])
             artist_dict_temp['similar'] = ";".join(similar_list)
+        birthday = get_birthday(artist_dict_temp['summary'])
+        artist_dict_temp['birthday'] = birthday
         return artist_dict_temp
-        
-artist = 'Rihanna'
+
+
+
+
+
+def get_birthday(text):
+    year_text = re.search('\d\d\d\d', text)
+    if year_text:
+        tokens = re.split('(\W+)', text[0:(year_text.end())])
+        text = ''.join(tokens[-5:]) #assuming the birthday will be the first to have these formats
+        return text
+#        try:
+#            date = dateutil.parser.parse(text, fuzzy = False)
+#            return date
+#        except ValueError:
+#            pass
+
+                
+                
+artist = 'rihanna'
 name = 'umbrella'
 album = 'Good Girl Gone Bad'
 number_of_items = '100'
