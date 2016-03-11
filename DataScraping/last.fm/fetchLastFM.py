@@ -13,7 +13,7 @@ http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=2a59114aa8b3e871f
 import urllib
 import httplib
 import json
-#import dateutil.parser
+import dateutil.parser
 import re
 
 def connection (params, **kwarg):
@@ -166,16 +166,15 @@ def get_birthday(text):
     if year_text:
         tokens = re.split('(\W+)', text[0:(year_text.end())])
         text = ''.join(tokens[-5:]) #assuming the birthday will be the first to have these formats
-        return text
-#        try:
-#            date = dateutil.parser.parse(text, fuzzy = False)
-#            return date
-#        except ValueError:
-#            pass
+        try:
+            date = dateutil.parser.parse(text, fuzzy = False)
+            return text
+        except ValueError:
+            pass
 
                 
                 
-artist = 'rihanna'
+artist = 'Jay chou'
 name = 'umbrella'
 album = 'Good Girl Gone Bad'
 number_of_items = '100'
