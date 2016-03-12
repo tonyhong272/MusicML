@@ -1,12 +1,7 @@
 import urllib.request
 import urllib.parse
 import json
-
-OAuthCode = 'GET IT EVERY TIME BY CLICKING YOUR SELF. Only solution for now; For example, get from https://developer.spotify.com/web-api/console/get-track/ for every some minutes or each time you use.' \
-'I have checked all avaibla resources but it returns 400 bad request. Since it is a black box, debugging is impossible, whoever interested in fixing this bug can help here. I will leave it as a task to ' \
-'whoever interested and expert in HTTP Auth'
-
-headers = { 'Authorization' : 'Bearer ' + OAuthCode, 'Accept' : 'application/json'}
+import binascii
 
 # currently useless
 client_id = '2da9e3d6414047ccb45cda8a9b359f59'
@@ -42,8 +37,22 @@ def get_code():
 
 def get_token():
 
-    ## to be fixed or ask Spotify Customer Service to fix. Can not find solution (400 Bad Request)
+    url = 'https://accounts.spotify.com/api/token'
+    data = {'grant_type':'client_credentials'}
+    data = urllib.parse.urlencode(data)
+    login = client_id + ':' + client_secret
+    encoded_login = binascii.b2a_base64(login.encode('ascii'))
+    ##
+    headers = {'Authorization': 'Basic ' + str(encoded_login)[2:-3]}
+    try:
+        req = urllib.request.Request(url, data.encode('ascii'), headers)
+        with urllib.request.urlopen(req) as response:
+            result = response.read()
+    except:
+        raise Exception('fetching artist name failed. check your internet connection')    ## to be fixed or ask Spotify Customer Service to fix. Can not find solution (400 Bad Request)
 
+    result = json.loads(result.decode('utf-8'))
+    return result['access_token']
 
 def find_key_in_json(data, key):
 
@@ -140,7 +149,11 @@ def get_tracks_from_popular_playlists(playlist_limit=2, playlist_offset=0, count
     return all_tracks
 
 
-OAuth = get_token()
+OAuthCode = get_token()
+
+headers = { 'Authorization' : 'Bearer ' + OAuthCode, 'Accept' : 'application/json'}
+
+print('Access Token Obtained:', OAuthCode)
 
 print(get_tracks_from_popular_playlists())
 
