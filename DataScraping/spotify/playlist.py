@@ -2,7 +2,9 @@ import urllib.request
 import urllib.parse
 import json
 
-OAuthCode = 'GET IT EVERY TIME BY CLICKING YOUR SELF. Only solution for now'
+OAuthCode = 'GET IT EVERY TIME BY CLICKING YOUR SELF. Only solution for now; For example, get from https://developer.spotify.com/web-api/console/get-track/ for every some minutes or each time you use.' \
+'I have checked all avaibla resources but it returns 400 bad request. Since it is a black box, debugging is impossible, whoever interested in fixing this bug can help here. I will leave it as a task to ' \
+'whoever interested and expert in HTTP Auth'
 
 headers = { 'Authorization' : 'Bearer ' + OAuthCode, 'Accept' : 'application/json'}
 
