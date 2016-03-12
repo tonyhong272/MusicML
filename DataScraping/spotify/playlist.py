@@ -1,7 +1,7 @@
 import urllib.request
 import urllib.parse
 import json
-import binascii
+import base64
 
 # currently useless
 client_id = '2da9e3d6414047ccb45cda8a9b359f59'
@@ -41,9 +41,10 @@ def get_token():
     data = {'grant_type':'client_credentials'}
     data = urllib.parse.urlencode(data)
     login = client_id + ':' + client_secret
-    encoded_login = binascii.b2a_base64(login.encode('ascii'))
+    encoded_login = base64.b64encode(login.encode('ascii'))
+    encoded_login = encoded_login.decode('utf-8')
     ##
-    headers = {'Authorization': 'Basic ' + str(encoded_login)[2:-3]}
+    headers = {'Authorization': 'Basic ' + encoded_login}
     try:
         req = urllib.request.Request(url, data.encode('ascii'), headers)
         with urllib.request.urlopen(req) as response:
