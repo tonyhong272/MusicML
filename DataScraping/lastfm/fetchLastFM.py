@@ -35,6 +35,7 @@ def get_song(artist, name,**kwarg):
                    'track' : name,
                    'limit' : '5',
                    'api_key' : '2a59114aa8b3e871fe76e14d3380ad98',
+                   'autocorrect':'1',
                    'format':'json'})
     json_response = connection (params)
     if 'track' in json_response:
@@ -56,12 +57,13 @@ def get_song(artist, name,**kwarg):
             track_dict_temp.update(artist_info1)
         if 'album' in track_dict_temp:
             album_info = track_dict_temp.pop('album')
-            album_info.pop('@attr')
             album_info.pop('image')
+            track_dict_temp['trackpos_album'] = album_info.pop('@attr')['position']
             album_info1 = {};
             for album_key in album_info:
                 album_info1['album_' + album_key] = album_info[album_key]
             track_dict_temp.update(album_info1)
+            track_dict_temp['similar_songs'] = '\n'.join(get_similar_song(artist, name, number_of_items = 200))
         return track_dict_temp
 #    else:
 #        raise ValueError('no track is retrieved')
@@ -76,6 +78,7 @@ def get_similar_song(artist, name, number_of_items,**kwarg):
                'track' : name,
                'limit' : number_of_items,
                'api_key' : '2a59114aa8b3e871fe76e14d3380ad98',
+               'autocorrect':'1',
                'format':'json'})
     json_response = connection (params)
     if 'similartracks' in json_response:
@@ -96,11 +99,15 @@ def get_album(artist, album,**kwarg):
                'artist' : artist,
                'album' : album,
                'api_key' : '2a59114aa8b3e871fe76e14d3380ad98',
+               'autocorrect':'1',
                'format':'json'})
     json_response = connection (params)
     if 'album' in json_response:
         album_dict_temp = json_response['album']
-        album_dict_temp.pop('image')
+        imageurls = [];
+        for imageurl in album_dict_temp.pop('image'):
+            imageurls.append('-'.join([imageurl['size'], imageurl['#text']]))
+        album_dict_temp['imageURL'] = ('\n'.join(imageurls))
         if 'wiki' in album_dict_temp:
             album_dict_temp.update(album_dict_temp.pop('wiki'))
         if 'tags' in album_dict_temp:
@@ -112,7 +119,7 @@ def get_album(artist, album,**kwarg):
             track_list = []
             for track_dicts in album_dict_temp.pop('tracks')['track']:
                 track_list.append('-'.join([str(track_dicts['@attr']['rank']), track_dicts['name']]))
-            album_dict_temp['tracks'] = ";".join(track_list)
+            album_dict_temp['tracks'] = "\n".join(track_list)
         return album_dict_temp
 
 def get_artist (artist, artist_mbid=None, **kwarg):
@@ -141,7 +148,10 @@ def get_artist (artist, artist_mbid=None, **kwarg):
             if 'content' in artist_dict_temp:
                 artist_dict_temp['bio'] = artist_dict_temp.pop('content')
                 artist_dict_temp['bio_published'] = artist_dict_temp.pop('published')
-        artist_dict_temp.pop('image')
+        imageurls = [];
+        for imageurl in artist_dict_temp.pop('image'):
+            imageurls.append('-'.join([imageurl['size'], imageurl['#text']]))
+        artist_dict_temp['imageURL'] = ('\n'.join(imageurls))
         artist_dict_temp.update(artist_dict_temp.pop('stats'))
         if 'tags' in artist_dict_temp:
             tag_list = []
@@ -157,29 +167,26 @@ def get_artist (artist, artist_mbid=None, **kwarg):
         artist_dict_temp['birthday'] = birthday
         return artist_dict_temp
 
-
-
-
-
 def get_birthday(text):
     year_text = re.search('\d\d\d\d', text)
     if year_text:
         tokens = re.split('(\W+)', text[0:(year_text.end())])
         text = ''.join(tokens[-5:]) #assuming the birthday will be the first to have these formats
         try:
-            date = dateutil.parser.parse(text, fuzzy = False)
+            dateutil.parser.parse(text, fuzzy = False)
             return text
         except ValueError:
             pass
 
-                
-                
-artist = 'Jay chou'
-name = 'umbrella'
-album = 'Good Girl Gone Bad'
-number_of_items = '100'
-artist_mbid = 'db36a76f-4cdf-43ac-8cd0-5e48092d2bae'
+
+#                
+#artist = 'Rihanna'
+#name = 'umbrella'
+#album = 'Good Girl Gone Bad'
+#number_of_items = '100'
+#artist_mbid = 'db36a76f-4cdf-43ac-8cd0-5e48092d2bae'
+###b = get_similar_song(artist, name, number_of_items)
+#
 #a = get_song(artist,name)
-#b = get_similar_song(artist, name, number_of_items)
-#c = get_album(artist, album)
-#d = get_artist (artist)
+#c = get_album(artist, a['album_title'])
+#d = get_artist (a['artist_name'])
