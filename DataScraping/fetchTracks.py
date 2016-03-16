@@ -10,6 +10,7 @@ from echonest import fetchEchoNest
 from lastfm import fetchLastFM
 import sqlite3 as lite
 import time
+import types
 
 def fetch_list(date = '2015-06-27'):
     chart = billboard.ChartData('hot-100', date, fetch=True)
@@ -21,7 +22,8 @@ def fetch_list(date = '2015-06-27'):
             entry.artist = entry.artist[0:entry.artist.find('With')-1]
         if entry.artist.find('&') != -1:
             entry.artist = entry.artist[0:entry.artist.find('&')-1]
-
+        if entry.artist.find('/') != -1:
+            entry.artist = entry.artist[0:entry.artist.find('/')-1]
         fetchList.append({'title':entry.title, 'artist':entry.artist})
     return fetchList
 
@@ -34,9 +36,13 @@ def fetch_infos(track):
             track['artist'] = trackInfoEchoNest['artist_name']
     else:
         print('Not fetched in EchoNest %s, %s'%(track['title'],track['artist']))
-    trackInfoLastFM = fetchLastFM.get_song(artist = track['artist'].encode('utf8'), name = track['title'].encode('utf8'))
-    if trackInfoLastFM == None:
-        print('Not fetched in LastFM %s, %s'%(track['title'],track['artist']))
+    if not is_in_db(track):
+        trackInfoLastFM = fetchLastFM.get_song(artist = track['artist'].encode('utf8'), name = track['title'].encode('utf8'))
+        if trackInfoLastFM == None:
+            print('Not fetched in LastFM %s, %s'%(track['title'],track['artist']))
+    else:
+        print('found in database 1 %s, %s'%(track['title'], track['artist']))
+        trackInfoLastFM = None
     return [trackInfoEchoNest, trackInfoLastFM]
 
 def save_sqlite(track_info):
@@ -50,16 +56,18 @@ def save_sqlite(track_info):
     column_names = []
     question_mark_sign = []
     for key in EN_key_list:
-        column_names.append('EN_' + key)
-        table_columns1 = ' '.join(['EN_' + key, convert_type_dict[type(trackInfoEchoNest[key])]])
-        table_columns.append(table_columns1)
-        question_mark_sign.append('?')
+        if type(trackInfoEchoNest[key]) != types.NoneType:
+            column_names.append('EN_' + key)
+            table_columns1 = ' '.join(['EN_' + key, convert_type_dict[type(trackInfoEchoNest[key])]])
+            table_columns.append(table_columns1)
+            question_mark_sign.append('?')
     
     for key in LF_key_list:
-        column_names.append('LF_' + key)
-        table_columns1 = ' '.join(['LF_' + key, convert_type_dict[type(trackInfoLastFM[key])]])
-        table_columns.append(table_columns1)
-        question_mark_sign.append('?')
+        if type(trackInfoLastFM[key]) != types.NoneType:
+            column_names.append('LF_' + key)
+            table_columns1 = ' '.join(['LF_' + key, convert_type_dict[type(trackInfoLastFM[key])]])
+            table_columns.append(table_columns1)
+            question_mark_sign.append('?')
 
     con = lite.connect('musicdata.db')
     with con:
@@ -79,7 +87,7 @@ def save_sqlite(track_info):
 def fetch_BBdates_list():
     con1 = lite.connect('billboardDB.db')
     cur1 = con1.cursor()
-    cur1.execute("SELECT DISTINCT BBDate FROM SongEntries WHERE DATE(substr(BBDate,1,4)||substr(BBDate,6,2)||substr(BBDate,9,2))BETWEEN DATE(19950101) AND DATE(20150630);")
+    cur1.execute("SELECT DISTINCT BBDate FROM SongEntries WHERE DATE(substr(BBDate,1,4)||substr(BBDate,6,2)||substr(BBDate,9,2))BETWEEN DATE(19950101) AND DATE(20140802);")
     BBdates_list=cur1.fetchall()
     return BBdates_list
 
@@ -110,4 +118,4 @@ for BB_date in reversed(BBdates_list):
         else:
             print('already saved %s, %s'%(track['title'],track['artist']))
         count = count + 1
-        print(count)
+        print((count, time.strftime("%Y-%m-%d %H:%M:%S")))
