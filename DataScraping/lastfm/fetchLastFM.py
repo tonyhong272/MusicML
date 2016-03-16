@@ -180,8 +180,8 @@ def get_birthday(text):
 
 
 #                
-#artist = 'Rihanna'
-#name = 'umbrella'
+artist = 'Jason Der\xc3\xbclo'
+name = 'Want To Want Me'
 #album = 'Good Girl Gone Bad'
 #number_of_items = '100'
 #artist_mbid = 'db36a76f-4cdf-43ac-8cd0-5e48092d2bae'
@@ -190,3 +190,44 @@ def get_birthday(text):
 #a = get_song(artist,name)
 #c = get_album(artist, a['album_title'])
 #d = get_artist (a['artist_name'])
+
+#'''
+#This function gets the song info in a dictionary.
+#'''
+#params = urllib.urlencode({'method' : 'track.getInfo',
+#               'artist' : artist,
+#               'track' : name,
+#               'limit' : '5',
+#               'api_key' : '2a59114aa8b3e871fe76e14d3380ad98',
+#               'autocorrect':'1',
+#               'format':'json'})
+#json_response = connection (params)
+#if 'track' in json_response:
+#    track_dict_temp = json_response['track']
+#    if 'wiki' in track_dict_temp:
+#        track_dict_temp.update(track_dict_temp.pop('wiki'))
+#    if 'streamable' in track_dict_temp:
+#        track_dict_temp.pop('streamable')
+#    if 'toptags' in track_dict_temp:
+#        tag_list = []
+#        for tag_dicts in track_dict_temp.pop('toptags')['tag']:
+#            tag_list.append(tag_dicts['name'])
+#        track_dict_temp['tags'] = ";".join(tag_list)
+#    if 'artist' in track_dict_temp:
+#        artist_info = track_dict_temp.pop('artist')
+#        artist_info1 = {};
+#        for artist_key in artist_info:
+#            artist_info1['artist_' + artist_key] = artist_info[artist_key]      
+#        track_dict_temp.update(artist_info1)
+#    if 'album' in track_dict_temp:
+#        album_info = track_dict_temp.pop('album')
+#        album_info.pop('image')
+#        track_dict_temp['trackpos_album'] = album_info.pop('@attr')['position']
+#        album_info1 = {};
+#        for album_key in album_info:
+#            album_info1['album_' + album_key] = album_info[album_key]
+#        track_dict_temp.update(album_info1)
+#        track_dict_temp['similar_songs'] = '\n'.join(get_similar_song(artist, name, number_of_items = 200))
+##    else:
+##        raise ValueError('no track is retrieved')
+
