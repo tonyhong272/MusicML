@@ -46,4 +46,4 @@ def save_analysis (songDict):
     with open(songDict.get('id') + '.txt', 'w') as outfile:
         json.dump(data, outfile)
 
-newSong = get_songDict(song_title = "Like I'm Gonna Lose You", song_artist = 'Meghan Trainor', is_saving_analysis = False)
+newSong = get_songDict(song_title = "You Know You Like It", song_artist = 'DJ Snake', is_saving_analysis = False)

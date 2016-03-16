@@ -9,6 +9,7 @@ from billboard import billboard
 from echonest import fetchEchoNest
 from lastfm import fetchLastFM
 import sqlite3 as lite
+import time
 
 def fetch_list(date = '2015-06-27'):
     chart = billboard.ChartData('hot-100', date, fetch=True)
@@ -16,21 +17,32 @@ def fetch_list(date = '2015-06-27'):
     for entry in chart:
         if entry.artist.find('Featuring') != -1:
             entry.artist = entry.artist[0:entry.artist.find('Featuring')-1]
+        if entry.artist.find('With') != -1:
+            entry.artist = entry.artist[0:entry.artist.find('With')-1]
+        if entry.artist.find('&') != -1:
+            entry.artist = entry.artist[0:entry.artist.find('&')-1]
+
         fetchList.append({'title':entry.title, 'artist':entry.artist})
     return fetchList
 
 def fetch_infos(track):
     trackInfoEchoNest = fetchEchoNest.get_songDict(song_title = track['title'].encode('utf8'), song_artist = track['artist'].encode('utf8'), is_saving_analysis = False)
-    if trackInfoEchoNest['title']:
-        track['title'] = trackInfoEchoNest['title']
-    if trackInfoEchoNest['artist_name']:
-        track['artist'] = trackInfoEchoNest['artist_name']
+    if trackInfoEchoNest != None:
+        if 'title' in trackInfoEchoNest:
+            track['title'] = trackInfoEchoNest['title']
+        if 'artist_name' in trackInfoEchoNest:
+            track['artist'] = trackInfoEchoNest['artist_name']
+    else:
+        print('Not fetched in EchoNest %s, %s'%(track['title'],track['artist']))
     trackInfoLastFM = fetchLastFM.get_song(artist = track['artist'].encode('utf8'), name = track['title'].encode('utf8'))
+    if trackInfoLastFM == None:
+        print('Not fetched in LastFM %s, %s'%(track['title'],track['artist']))
     return [trackInfoEchoNest, trackInfoLastFM]
 
 def save_sqlite(track_info):
     [trackInfoEchoNest, trackInfoLastFM] = track_info
     convert_type_dict = {float:'REAL', unicode:'TEXT', int:'INTEGER', str:'TEXT'}
+    
     EN_key_list = trackInfoEchoNest.keys()
     LF_key_list = trackInfoLastFM.keys()
     
@@ -91,9 +103,11 @@ for BB_date in reversed(BBdates_list):
     count = 0
     for track in fetchList:
         if not is_in_db(track):
+            time.sleep(3)
             track_info = fetch_infos(track)
-            save_sqlite(track_info)
+            if track_info[0] != None and track_info[1] != None:
+                save_sqlite(track_info)
         else:
-            print('already saved %s, %s'%(track['title'],track['title']))
+            print('already saved %s, %s'%(track['title'],track['artist']))
         count = count + 1
         print(count)
