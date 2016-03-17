@@ -11,6 +11,8 @@ from lastfm import fetchLastFM
 import sqlite3 as lite
 import time
 import types
+import pickle
+import os.path
 
 def fetch_list(date = '2015-06-27'):
     chart = billboard.ChartData('hot-100', date, fetch=True)
@@ -61,6 +63,8 @@ def save_sqlite(track_info):
             table_columns1 = ' '.join(['EN_' + key, convert_type_dict[type(trackInfoEchoNest[key])]])
             table_columns.append(table_columns1)
             question_mark_sign.append('?')
+        else:
+            trackInfoEchoNest.pop(key)
     
     for key in LF_key_list:
         if type(trackInfoLastFM[key]) != types.NoneType:
@@ -68,6 +72,8 @@ def save_sqlite(track_info):
             table_columns1 = ' '.join(['LF_' + key, convert_type_dict[type(trackInfoLastFM[key])]])
             table_columns.append(table_columns1)
             question_mark_sign.append('?')
+        else:
+            trackInfoLastFM.pop(key)
 
     con = lite.connect('musicdata.db')
     with con:
@@ -87,7 +93,7 @@ def save_sqlite(track_info):
 def fetch_BBdates_list():
     con1 = lite.connect('billboardDB.db')
     cur1 = con1.cursor()
-    cur1.execute("SELECT DISTINCT BBDate FROM SongEntries WHERE DATE(substr(BBDate,1,4)||substr(BBDate,6,2)||substr(BBDate,9,2))BETWEEN DATE(19950101) AND DATE(20140802);")
+    cur1.execute("SELECT DISTINCT BBDate FROM SongEntries WHERE DATE(substr(BBDate,1,4)||substr(BBDate,6,2)||substr(BBDate,9,2))BETWEEN DATE(19950101) AND DATE(20060128);")
     BBdates_list=cur1.fetchall()
     return BBdates_list
 
@@ -105,17 +111,30 @@ def is_in_db(track):
         con.close()
 
 BBdates_list = fetch_BBdates_list()
+if os.path.isfile('dump.txt'):
+    file_save = open('dump.txt', 'r')
+    fetched_list = pickle.load(file_save)
+else:
+    fetched_list = [];
+
 for BB_date in reversed(BBdates_list):
     fetchList = fetch_list(BB_date[0])
     print('Now fetching list of ' + BB_date[0])
     count = 0
     for track in fetchList:
-        if not is_in_db(track):
-            time.sleep(3)
-            track_info = fetch_infos(track)
-            if track_info[0] != None and track_info[1] != None:
-                save_sqlite(track_info)
+        if track not in fetched_list:
+            if not is_in_db(track):
+                time.sleep(3)
+                track_info = fetch_infos(track)
+                fetched_list.append(track)
+                file_save = open('dump.txt', 'w')
+                pickle.dump(fetched_list, file_save)
+                file_save.close()
+                if track_info[0] != None and track_info[1] != None:
+                    save_sqlite(track_info)
+            else:
+                print('already saved %s, %s'%(track['title'],track['artist']))
         else:
-            print('already saved %s, %s'%(track['title'],track['artist']))
+            print('already saved 1 %s, %s'%(track['title'],track['artist']))
         count = count + 1
-        print((count, time.strftime("%Y-%m-%d %H:%M:%S")))
+        print((count, BB_date, time.strftime("%Y-%m-%d %H:%M:%S")))

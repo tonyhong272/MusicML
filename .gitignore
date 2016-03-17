@@ -63,3 +63,4 @@ target/
 DataScraping/billboardDB.db
 DataScraping/musicdata.db
 *.db
+*.db
