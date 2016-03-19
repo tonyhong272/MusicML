@@ -1,59 +1,6 @@
 import urllib.request
 import urllib.parse
 import json
-import base64
-
-# currently useless
-client_id = '2da9e3d6414047ccb45cda8a9b359f59'
-client_secret = 'fe5f334a1cf24ad897944dff46b8a3e6'
-
-"""
-get_name: artist name is the english name for the artist
-country_code has to obey with Spotify standards and currently not implemented
-, i.e. using the default value
-"""
-
-"""
-return OAuth token and expiration time in seconds.
-"""
-
-def get_code():
-
-    query = {'client_id': client_id, 'response_type': 'code', 'redirect_uri': 'http://google.com'}
-    url = 'https://accounts.spotify.com/authorize?' + urllib.parse.urlencode(query)
-    code_headers = {'Accept' : 'application/json'}
-
-    try:
-        req = urllib.request.Request(url, None, code_headers)
-        with urllib.request.urlopen(req) as response:
-            result = response.read()
-    except:
-        raise Exception('fetching artist name failed. check your internet connection')
-
-    result = json.loads(result.decode('utf-8'))
-
-    return result
-
-
-def get_token():
-
-    url = 'https://accounts.spotify.com/api/token'
-    data = {'grant_type':'client_credentials'}
-    data = urllib.parse.urlencode(data)
-    login = client_id + ':' + client_secret
-    encoded_login = base64.b64encode(login.encode('ascii'))
-    encoded_login = encoded_login.decode('utf-8')
-    ##
-    headers = {'Authorization': 'Basic ' + encoded_login}
-    try:
-        req = urllib.request.Request(url, data.encode('ascii'), headers)
-        with urllib.request.urlopen(req) as response:
-            result = response.read()
-    except:
-        raise Exception('fetching artist name failed. check your internet connection')    ## to be fixed or ask Spotify Customer Service to fix. Can not find solution (400 Bad Request)
-
-    result = json.loads(result.decode('utf-8'))
-    return result['access_token']
 
 def find_key_in_json(data, key):
 
@@ -77,7 +24,8 @@ def find_key_in_json(data, key):
     return None
 
 
-def get_popular_playlists(limit=2, offset=0, country='US', timestamp='2014-10-23T09:00:00'):
+def get_popular_playlists(headers, limit=2,
+                          offset=0, country='US', timestamp='2014-10-23T09:00:00'):
 
     timestamp = timestamp.encode('utf-8')
 
@@ -96,6 +44,7 @@ def get_popular_playlists(limit=2, offset=0, country='US', timestamp='2014-10-23
 
     return result
 
+
 def get_tracks(playlist):
 
     assert isinstance(playlist, dict), 'playlist is not an appropriate type of json'
@@ -104,20 +53,30 @@ def get_tracks(playlist):
 
     return find_key_in_json(tracks, 'href')
 
-def get_tracks_from_popular_playlists(playlist_limit=2, playlist_offset=0, country='US', timestamp='2014-10-23T09:00:00'):
 
-    playlists = get_popular_playlists(playlist_limit, playlist_offset, country, timestamp)
+def get_tracks_from_popular_playlists(headers, playlist_limit=2, playlist_offset=0,
+                                      country='US', timestamp='2014-10-23T09:00:00'):
+
+    playlists = get_popular_playlists(headers, playlist_limit, playlist_offset, country, timestamp)
 
     playlists = find_key_in_json(playlists, 'playlists')
 
     playlists = find_key_in_json(playlists, 'items')
 
-
     assert isinstance(playlists, list), 'playlists are not properly formated as lists'
 
-    all_tracks = []
+    all_playlists = []
 
     for playlist in playlists:
+
+        playlist_name = playlist['name']
+        playlist_id = playlist['id']
+        playlist_owner = playlist['owner']
+        playlist_url = playlist['href']
+        owner_id = playlist_owner['id']
+        owner_uri = playlist_owner['uri']
+
+        all_tracks = []
 
         url = get_tracks(playlist)
 
@@ -144,18 +103,28 @@ def get_tracks_from_popular_playlists(playlist_limit=2, playlist_offset=0, count
             popularity = track['popularity']
             album = track['album']
             album_name = album['name']
+            album_url = album['external_urls']['spotify']
+            album_uri = album['uri']
+            track_url = track['external_urls']['spotify']
+            track_uri = track['uri']
 
-            all_tracks.append({'artists': names, 'track_name': track_name, 'album_name': album_name, 'popularity': popularity})
+            all_tracks.append({'artists': names,
+                               'track_name': track_name,
+                               'album_name': album_name,
+                               'popularity': popularity,
+                               'track_url': track_url,
+                               'track_uri': track_uri,
+                               'album_url': album_url,
+                               'album_uri': album_uri})
 
-    return all_tracks
+        ret_data = {'playlist_name' : playlist_name, 'playlist_id' : playlist_id,
+                    'owner_id' : owner_id, 'owner_uri' : owner_uri,
+                    'playlist_url': playlist_url,
+                    'tracks_data' : all_tracks.copy()}
+        all_playlists.append(ret_data.copy())
 
 
-OAuthCode = get_token()
+    return all_playlists
 
-headers = { 'Authorization' : 'Bearer ' + OAuthCode, 'Accept' : 'application/json'}
-
-print('Access Token Obtained:', OAuthCode)
-
-print(get_tracks_from_popular_playlists())
 
 
