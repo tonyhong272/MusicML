@@ -14,41 +14,55 @@ import types
 import pickle
 import os.path
 
-def fetch_list(date = '2015-06-27'):
-    chart = billboard.ChartData('hot-100', date, fetch=True)
-    fetchList = []
-    for entry in chart:
-        if entry.artist.find('Featuring') != -1:
-            entry.artist = entry.artist[0:entry.artist.find('Featuring')-1]
-        if entry.artist.find('With') != -1:
-            entry.artist = entry.artist[0:entry.artist.find('With')-1]
-        if entry.artist.find('&') != -1:
-            entry.artist = entry.artist[0:entry.artist.find('&')-1]
-        if entry.artist.find('/') != -1:
-            entry.artist = entry.artist[0:entry.artist.find('/')-1]
-        fetchList.append({'title':entry.title, 'artist':entry.artist})
-    return fetchList
+def form_track(song):
+    track={}
+    track['artist'] = song[2]
+    track['title'] = song[1]
+    track['EN_artist'] = song[2]
+    track['EN_title'] = song[1]
+    if track['artist'].find('Featuring') != -1:
+        track['artist'] = track['artist'][0:track['artist'].find('Featuring')-1]
+    if track['artist'].find('With') != -1:
+        track['artist'] = track['artist'][0:track['artist'].find('With')-1]
+    if track['artist'].find('&') != -1:
+        track['artist'] = track['artist'][0:track['artist'].find('&')-1]
+    if track['artist'].find('/') != -1:
+        track['artist'] = track['artist'][0:track['artist'].find('/')-1]
+    return track
 
 def fetch_infos(track):
     trackInfoEchoNest = fetchEchoNest.get_songDict(song_title = track['title'].encode('utf8'), song_artist = track['artist'].encode('utf8'), is_saving_analysis = False)
     if trackInfoEchoNest != None:
         if 'title' in trackInfoEchoNest:
-            track['title'] = trackInfoEchoNest['title']
+            track['EN_title'] = trackInfoEchoNest['title']
         if 'artist_name' in trackInfoEchoNest:
-            track['artist'] = trackInfoEchoNest['artist_name']
+            track['EN_artist'] = trackInfoEchoNest['artist_name']
     else:
         print('Not fetched in EchoNest %s, %s'%(track['title'],track['artist']))
     if not is_in_db(track):
-        trackInfoLastFM = fetchLastFM.get_song(artist = track['artist'].encode('utf8'), name = track['title'].encode('utf8'))
+        trackInfoLastFM = fetchLastFM.get_song(artist = track['EN_artist'].encode('utf8'), name = track['EN_title'].encode('utf8'))
         if trackInfoLastFM == None:
             print('Not fetched in LastFM %s, %s'%(track['title'],track['artist']))
     else:
-        print('found in database 1 %s, %s'%(track['title'], track['artist']))
+        print('found in database %s, %s'%(track['title'], track['artist']))
         trackInfoLastFM = None
-    return [trackInfoEchoNest, trackInfoLastFM]
+    return [track, trackInfoEchoNest, trackInfoLastFM]
+
+def is_in_db(track):
+    con = lite.connect('musicdata.db')
+    with con:
+        cur = con.cursor()
+        #cur.execute("DROP TABLE IF EXISTS BoardEntries")
+        cur.execute("SELECT rowid FROM TrackEntries WHERE (SearchTitle = ? and SearchArtist = ?) or (EN_title = ? and EN_artist_name = ?)", (track['title'],track['artist'], track['EN_title'],track['EN_artist']))
+        existingEntry=cur.fetchone()
+        if existingEntry is None:
+            return False
+        else:
+            return True
+        con.close()
 
 def save_sqlite(track_info):
-    [trackInfoEchoNest, trackInfoLastFM] = track_info
+    [track, trackInfoEchoNest, trackInfoLastFM] = track_info
     convert_type_dict = {float:'REAL', unicode:'TEXT', int:'INTEGER', str:'TEXT'}
     
     EN_key_list = trackInfoEchoNest.keys()
@@ -79,62 +93,35 @@ def save_sqlite(track_info):
     with con:
         cur = con.cursor()
         #cur.execute("DROP TABLE IF EXISTS BoardEntries")
-        cur.execute("CREATE TABLE IF NOT EXISTS TrackEntries(ID INTEGER PRIMARY KEY AUTOINCREMENT, " + ', '.join(table_columns) +")")
-        cur.execute("SELECT rowid FROM TrackEntries WHERE EN_title = ? and EN_artist_name = ?", (trackInfoEchoNest['title'],trackInfoEchoNest['artist_name']))
+        cur.execute("SELECT ROWID FROM TrackEntries WHERE EN_title = ? and EN_artist_name = ?", (trackInfoEchoNest['title'],trackInfoEchoNest['artist_name']))
         existingEntry=cur.fetchone()
         if existingEntry is None:
             print('saving into database %s, %s'%(trackInfoEchoNest['title'], trackInfoEchoNest['artist_name']))
-            single_entry = tuple(trackInfoEchoNest.values() + trackInfoLastFM.values())
-            cur.execute('INSERT OR IGNORE INTO TrackEntries(ID, ' + ', '.join(column_names) + ') VALUES (NULL,' + ', '.join(question_mark_sign)+')', single_entry)
+            single_entry = tuple([str(time.strftime("%Y-%m-%d %H:%M:%S")), track['title'], track['artist']] + trackInfoEchoNest.values() + trackInfoLastFM.values())
+            cur.execute('INSERT OR IGNORE INTO TrackEntries(ID, EntryDate, SearchTitle, SearchArtist, ' + ', '.join(column_names) + ') VALUES (NULL, ?,?,?, ' + ', '.join(question_mark_sign)+')', single_entry)
         else:
             print('found in database %s, %s'%(trackInfoEchoNest['title'], trackInfoEchoNest['artist_name']))
     con.close()
 
-def fetch_BBdates_list():
+def fetch_BBSong_list():
     con1 = lite.connect('billboardDB.db')
     cur1 = con1.cursor()
-    cur1.execute("SELECT DISTINCT BBDate FROM SongEntries WHERE DATE(substr(BBDate,1,4)||substr(BBDate,6,2)||substr(BBDate,9,2))BETWEEN DATE(19950101) AND DATE(20060128);")
-    BBdates_list=cur1.fetchall()
-    return BBdates_list
+    cur1.execute("SELECT DISTINCT ROWID, Title, Artist FROM SongEntries ORDER BY ROWID")
+    BBSong_List=cur1.fetchall()
+    con1.close()
+    return BBSong_List
 
-def is_in_db(track):
-    con = lite.connect('musicdata.db')
-    with con:
-        cur = con.cursor()
-        #cur.execute("DROP TABLE IF EXISTS BoardEntries")
-        cur.execute("SELECT rowid FROM TrackEntries WHERE EN_title = ? and EN_artist_name = ?", (track['title'],track['artist']))
-        existingEntry=cur.fetchone()
-        if existingEntry is None:
-            return False
-        else:
-            return True
-        con.close()
+BBSongList = fetch_BBSong_list()
 
-BBdates_list = fetch_BBdates_list()
-if os.path.isfile('dump.txt'):
-    file_save = open('dump.txt', 'r')
-    fetched_list = pickle.load(file_save)
-else:
-    fetched_list = [];
-
-for BB_date in reversed(BBdates_list):
-    fetchList = fetch_list(BB_date[0])
-    print('Now fetching list of ' + BB_date[0])
-    count = 0
-    for track in fetchList:
-        if track not in fetched_list:
-            if not is_in_db(track):
-                time.sleep(3)
-                track_info = fetch_infos(track)
-                fetched_list.append(track)
-                file_save = open('dump.txt', 'w')
-                pickle.dump(fetched_list, file_save)
-                file_save.close()
-                if track_info[0] != None and track_info[1] != None:
+count = 0
+for song in BBSongList:
+        time.sleep(3)
+        count += 1
+        track = form_track(song)
+        if not is_in_db(track):
+            track_info = fetch_infos(track)
+            if track_info[1] != None and track_info[2] != None:
                     save_sqlite(track_info)
-            else:
-                print('already saved %s, %s'%(track['title'],track['artist']))
         else:
-            print('already saved 1 %s, %s'%(track['title'],track['artist']))
-        count = count + 1
-        print((count, BB_date, time.strftime("%Y-%m-%d %H:%M:%S")))
+            print('already saved %s, %s'%(track['title'],track['artist']))
+        print((count, song, time.strftime("%Y-%m-%d %H:%M:%S")))
