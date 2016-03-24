@@ -16,10 +16,8 @@ import os.path
 
 def form_track(song):
     track={}
-    track['artist'] = song[2]
-    track['title'] = song[1]
-    track['EN_artist'] = song[2]
-    track['EN_title'] = song[1]
+    track['artist'] = track['EN_artist'] = song[1]
+    track['title'] = track['EN_title'] = song[0]
     if track['artist'].find('Featuring') != -1:
         track['artist'] = track['artist'][0:track['artist'].find('Featuring')-1]
     if track['artist'].find('With') != -1:
@@ -55,11 +53,12 @@ def is_in_db(track):
         #cur.execute("DROP TABLE IF EXISTS BoardEntries")
         cur.execute("SELECT rowid FROM TrackEntries WHERE (SearchTitle = ? and SearchArtist = ?) or (EN_title = ? and EN_artist_name = ?)", (track['title'],track['artist'], track['EN_title'],track['EN_artist']))
         existingEntry=cur.fetchone()
-        con.close()
-        if existingEntry is None:
-            return False
-        else:
-            return True
+    con.close()
+
+    if existingEntry is None:
+        return False
+    else:
+        return True
 
 
 def save_sqlite(track_info):
@@ -107,22 +106,27 @@ def save_sqlite(track_info):
 def fetch_BBSong_list():
     con1 = lite.connect('billboardDB.db')
     cur1 = con1.cursor()
-    cur1.execute("SELECT DISTINCT ROWID, Title, Artist FROM SongEntries ORDER BY ROWID")
+    cur1.execute("SELECT DISTINCT Title, Artist FROM SongEntries ORDER BY ROWID")
     BBSong_List=cur1.fetchall()
     con1.close()
     return BBSong_List
 
 BBSongList = fetch_BBSong_list()
-
 count = 0
 for song in BBSongList:
-        track = form_track(song)
-        if not is_in_db(track):
-            time.sleep(3)
+    retry = 10
+    while retry > 0:
+        try:
+            track = form_track(song)
             count += 1
-            track_info = fetch_infos(track)
-            if track_info[1] != None and track_info[2] != None:
+            if not is_in_db(track):
+                time.sleep(3)
+                track_info = fetch_infos(track)
+                if track_info[1] != None and track_info[2] != None:
                     save_sqlite(track_info)
-        else:
-            print('already saved %s, %s'%(track['title'],track['artist']))
-        print((count, song, time.strftime("%Y-%m-%d %H:%M:%S")))
+            else:
+                print('already saved %s, %s' % (track['title'], track['artist']))
+            print((count, song, time.strftime("%Y-%m-%d %H:%M:%S")))
+            retry = -1
+        except Exception:
+            retry -= 1
