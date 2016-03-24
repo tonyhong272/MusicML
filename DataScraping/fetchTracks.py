@@ -55,11 +55,12 @@ def is_in_db(track):
         #cur.execute("DROP TABLE IF EXISTS BoardEntries")
         cur.execute("SELECT rowid FROM TrackEntries WHERE (SearchTitle = ? and SearchArtist = ?) or (EN_title = ? and EN_artist_name = ?)", (track['title'],track['artist'], track['EN_title'],track['EN_artist']))
         existingEntry=cur.fetchone()
+        con.close()
         if existingEntry is None:
             return False
         else:
             return True
-        con.close()
+
 
 def save_sqlite(track_info):
     [track, trackInfoEchoNest, trackInfoLastFM] = track_info
@@ -115,10 +116,10 @@ BBSongList = fetch_BBSong_list()
 
 count = 0
 for song in BBSongList:
-        time.sleep(3)
-        count += 1
         track = form_track(song)
         if not is_in_db(track):
+            time.sleep(3)
+            count += 1
             track_info = fetch_infos(track)
             if track_info[1] != None and track_info[2] != None:
                     save_sqlite(track_info)
