@@ -38,7 +38,7 @@ def fetch_infos(track):
     else:
         print('Not fetched in EchoNest %s, %s'%(track['title'],track['artist']))
     if not is_in_db(track):
-        trackInfoLastFM = fetchLastFM.get_song(artist = track['EN_artist'].encode('utf8'), name = track['EN_title'].encode('utf8'))
+        trackInfoLastFM = fetchLastFM.get_song(artist = track['artist'].encode('utf8'), name = track['title'].encode('utf8'))
         if trackInfoLastFM == None:
             print('Not fetched in LastFM %s, %s'%(track['title'],track['artist']))
     else:
@@ -113,20 +113,35 @@ def fetch_BBSong_list():
 
 BBSongList = fetch_BBSong_list()
 count = 0
+if os.path.isfile('dump.txt'):
+    file_save = open('dump.txt', 'r')
+    fetched_list = pickle.load(file_save)
+else:
+   fetched_list = [];
+
+
 for song in BBSongList:
-    retry = 10
+    retry = 3
     while retry > 0:
         try:
             track = form_track(song)
             count += 1
-            if not is_in_db(track):
-                time.sleep(3)
-                track_info = fetch_infos(track)
-                if track_info[1] != None and track_info[2] != None:
-                    save_sqlite(track_info)
+            if track not in fetched_list:
+                fetched_list.append(track)
+                if not is_in_db(track):
+                    time.sleep(3)
+                    track_info = fetch_infos(track)
+                    if track_info[1] != None and track_info[2] != None:
+                        save_sqlite(track_info)
+                else:
+                    print('already saved %s, %s' % (track['title'], track['artist']))
+                print((count, song, time.strftime("%Y-%m-%d %H:%M:%S")))
             else:
-                print('already saved %s, %s' % (track['title'], track['artist']))
-            print((count, song, time.strftime("%Y-%m-%d %H:%M:%S")))
+                print('already fetched %s, %s' % (track['title'], track['artist']))
             retry = -1
-        except Exception:
+            if count % 1000 == 0:
+                file_save = open('dump.txt', 'w')
+                pickle.dump(fetched_list, file_save)
+                file_save.close()
+        except:
             retry -= 1
