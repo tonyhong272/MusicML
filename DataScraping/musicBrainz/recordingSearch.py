@@ -54,7 +54,6 @@ def fetch_artist(artist_mbid, **kwarg):
             artist_info['tag'] = ';'.join([tag['name'] for tag in tag_list])
     return artist_info
 
-
 if __name__ == '__main__':
     args = ['Rihanna', 'umbrella']
     print(args)
