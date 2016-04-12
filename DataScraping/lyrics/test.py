@@ -1,7 +1,48 @@
-'''
-test filebhbh
-this is a test.123jnjnj
+# test.py
+# Johnny Dai 4/11/2016
+# Test version script to scraping www.lyrics.com to grab lyrics of target song
+# Ex:
+# To grab lyrics of 'This Love'
+# print find_lyrics(this love)
 
-test file12312
-this is a test.12312132
-'''
+import urllib
+from bs4 import BeautifulSoup
+
+#Function is to get rid of <br> in html content
+def text_with_newlines(elem):
+    text = ''
+    for e in elem.recursiveChildGenerator():
+        if isinstance(e, basestring):
+            text += e.strip()
+        elif e.name == 'br':
+            text += '\n'
+    return text
+
+#Function to get url of lyrics website of target song
+def find_lyrics_url(song):
+    serviceurl = 'http://www.lyrics.com/search.php?'
+    url =  serviceurl + urllib.urlencode({'keyword':song,'what':'all'})
+    html = urllib.urlopen(url).read()
+    soup = BeautifulSoup(html)
+    txt = soup.find("a", {"class": "lyrics_preview"})
+    return txt.get('href')
+
+#Main function
+def find_lyrics(song):
+    url =  'http://www.lyrics.com/' + find_lyrics_url(song)
+    html = urllib.urlopen(url).read()
+    soup = BeautifulSoup(html)
+    txt = soup.find("div", {"class": "SCREENONLY"})
+    lyrics = text_with_newlines(txt)
+    return lyrics
+
+#Ex:
+#print find_lyrics('bubbly')
+print find_lyrics('this love')
+#print find_lyrics('back at one')
+
+
+
+#MISC, no use
+#http://www.lyrics.com/search.php?keyword=fallin+for+you+lyrics&what=all
+#url = "http://www.lyrics.com/search.php?"keyword=fallin+for+you+lyrics&what=all
