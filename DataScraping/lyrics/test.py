@@ -28,8 +28,8 @@ def find_lyrics_url(song):
     return txt.get('href')
 
 #Main function
-def find_lyrics(song):
-    url =  'http://www.lyrics.com/' + find_lyrics_url(song)
+def find_lyrics(title, artist):
+    url =  'http://www.lyrics.com/' + find_lyrics_url(title + ' ' + artist)
     html = urllib.urlopen(url).read()
     soup = BeautifulSoup(html)
     txt = soup.find("div", {"class": "SCREENONLY"})
@@ -38,7 +38,7 @@ def find_lyrics(song):
 
 #Ex:
 #print find_lyrics('bubbly')
-print find_lyrics('this love')
+print find_lyrics( title = 'this love', artist = 'maroon 5')
 #print find_lyrics('back at one')
 
 
