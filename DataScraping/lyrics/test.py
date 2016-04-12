@@ -3,7 +3,7 @@
 # Test version script to scraping www.lyrics.com to grab lyrics of target song
 # Ex:
 # To grab lyrics of 'This Love'
-# print find_lyrics(this love)
+# print find_lyrics( title = 'this love', artist = 'maroon 5')
 
 import urllib
 from bs4 import BeautifulSoup
@@ -37,10 +37,8 @@ def find_lyrics(title, artist):
     return lyrics
 
 #Ex:
-#print find_lyrics('bubbly')
 print find_lyrics( title = 'this love', artist = 'maroon 5')
 
-#print find_lyrics('back at one')
 
 
 
