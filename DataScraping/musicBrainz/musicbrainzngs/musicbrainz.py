@@ -16,9 +16,9 @@ import xml.etree.ElementTree as etree
 from xml.parsers import expat
 from warnings import warn
 
-from musicbrainzngs import mbxml
-from musicbrainzngs import util
-from musicbrainzngs import compat
+import mbxml
+import util
+import compat
 
 _version = "0.6dev"
 _log = logging.getLogger("musicbrainzngs")
